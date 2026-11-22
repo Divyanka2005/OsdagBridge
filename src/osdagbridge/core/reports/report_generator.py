@@ -129,6 +129,9 @@ from .chap6 import ch6_drawings
 from .chap7 import ch7_quantities
 from .chap8 import ch8_design_log
 from .chap9 import references
+from .table_utils import add_repeating_headers
+from .styles import PAGE_GEOMETRY
+
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +159,7 @@ def preamble(project_name, job_number, report_date, report_version='Rev 0'):
 \documentclass[12pt,a4paper]{report}
 
 % Packages
-\usepackage[a4paper, margin=1in]{geometry}
+\usepackage[""" + PAGE_GEOMETRY + r"""]{geometry}
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -940,6 +943,7 @@ def generate_report(payload, request):
             doc_parts.append(r"\end{document}")
 
             full_tex = "\n".join(doc_parts)
+            full_tex = add_repeating_headers(full_tex)
 
 
             # NOTE: longtable header repetition is handled per-table in each
