@@ -1,5 +1,6 @@
 from typing import List
 
+from osdagbridge.core.reports import styles
 from osdagbridge.core.utils.common import (
     KEY_DESIGN_MODE
 )
@@ -56,7 +57,7 @@ form the basis of all design calculations in this software.
 \vspace{0.5cm}
 
 \begingroup
-\setlength{\tabcolsep}{3.5pt}
+\setlength{\tabcolsep}{""" + styles.TABCOLSEP_NARROW + r"""}
 \begin{table}[H]
 \caption{\textbf{IRC Codes}}
 \begin{tabular}{|c|c|p{13cm}|}
@@ -79,7 +80,7 @@ IRC SP 114 & 2018 & Seismic Design of Road Bridges \\
 \end{table}
 
 \begingroup
-\setlength{\tabcolsep}{3.5pt}
+\setlength{\tabcolsep}{""" + styles.TABCOLSEP_NARROW + r"""}
 \begin{table}[H]
 \caption{\textbf{IS Codes}}
 \begin{tabular}{|c|c|p{13cm}|}

@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from osdagbridge.core.reports import styles
 from osdagbridge.core.utils.common import (
     KEY_SPAN,
     KEY_TS_NO_OF_GIRDERS,
@@ -83,8 +84,8 @@ A grillage model was used for structural analysis. The deck is idealized as a gr
 \vspace{1em}
 \begingroup
 \footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{""" + styles.TABCOLSEP_TIGHT + r"""}
+\renewcommand{\arraystretch}{""" + styles.ARRAYSTRETCH_COMPACT + r"""}
 
 \begin{longtable}{|
 >{\centering\arraybackslash}p{3.1cm}|

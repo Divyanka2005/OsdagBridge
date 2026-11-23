@@ -8,12 +8,11 @@ matplotlib.use("Agg")          # no GUI window; safe inside the Qt app
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 
-# TODO (Task 6): move these two colors into your styles.py and import them
-COLOR_PASS  = "#91B014"   # Osdag green  — UR ≤ 1.0
-COLOR_FAIL  = "#D62728"   # Red          — UR > 1.0
-COLOR_STEEL = "#4472C4"   # Blue         — structural steel bars
-COLOR_CONC  = "#ED7D31"   # Orange       — concrete volume bar
-COLOR_REBAR = "#70AD47"   # Green        — reinforcement steel bar
+# Colours are imported from the central style module (Task 6)
+from osdagbridge.core.reports.styles import (
+    COLOR_PASS, COLOR_FAIL,
+    COLOR_STEEL, COLOR_CONC, COLOR_REBAR,
+)
 
 _OUTDIR = tempfile.mkdtemp(prefix="osdag_report_charts_")
 
