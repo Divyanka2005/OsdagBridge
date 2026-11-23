@@ -142,6 +142,7 @@ from osdagbridge.core.utils.common import (
 )
 
 from osdagbridge.core.reports.report_utils import _tex, _render_value, get_girder_entries
+from osdagbridge.core.reports.charts import build_ur_charts_latex
 
 if TYPE_CHECKING:
     pass
@@ -1065,6 +1066,73 @@ Fatigue Shear Resistance, $Q_r$ & IRC 22 Table 8 ($\phi d$, $N_{sc}$) & """
     ]
     t522_content = "\n".join(_t522)
 
+    # ── Task 4: UR bar charts for Section 5.5 ────────────────────────────────
+    # Collect (label, ur) pairs from the same _dcr_row / _deck_row / _cb_row
+    # calls used to build t522_content above.  Labels must start with the
+    # group keyword recognised by build_ur_charts_latex:
+    #   "Girder…"       → Steel Plate Girders chart
+    #   "Deck…"         → Concrete Deck Slab chart
+    #   "Cross Bracing…"→ Cross Bracing chart
+    #   "End Diaphragm…"→ End Diaphragms chart
+    def _raw_ur(cells):
+        """Return the numeric UR from a _dcr_row/_deck_row/_cb_row 4-tuple,
+        or None when not available (---  or N/A)."""
+        raw = cells[3] if cells else None
+        if raw in (None, "---", "N/A", ""):
+            return None
+        # strip LaTeX colour command if present: \textcolor{red}{2.67}
+        import re as _re
+        m = _re.search(r"-?\d+(?:\.\d+)?", str(raw))
+        return float(m.group()) if m else None
+
+    _ur_chart_rows = []
+    for _lbl, _check_ids, _fallback in [
+        ("Girder — Moment",         {1},          ""),
+        ("Girder — Shear",          {2},          ""),
+        ("Girder — LTB",            {5},          ""),
+        ("Girder — Deflection",     {13, 14},     "mm"),
+        ("Girder — Stress",         {11},         "MPa"),
+        ("Girder — Fatigue",        {8, 9},       "MPa"),
+    ]:
+        _u = _raw_ur(_dcr_row(_check_ids, fallback_unit=_fallback))
+        if _u is not None:
+            _ur_chart_rows.append((_lbl, _u))
+
+    for _lbl, _dem_k, _cap_k, _unit in [
+        ("Deck — Flexure (sagging)",   KEY_DD_M_ULS_SAG, KEY_DD_MU_BOT,    "kN-m/m"),
+        ("Deck — Flexure (hogging)",   KEY_DD_M_ULS_HOG, KEY_DD_MU_TOP,    "kN-m/m"),
+        ("Deck — Cantilever Overhang", KEY_DD_M_ULS_OH,  KEY_DD_MU_OH,     "kN-m/m"),
+        ("Deck — Punching Shear",      KEY_DD_PUNCH_VED, KEY_DD_VRD_C_MPA, "MPa"),
+        ("Deck — One-Way Shear",       KEY_DD_SHEAR_VED, KEY_DD_SHEAR_VRDC,"kN/m"),
+    ]:
+        _u = _raw_ur(_deck_row(_dem_k, _cap_k, _unit))
+        if _u is not None:
+            _ur_chart_rows.append((_lbl, _u))
+
+    for _lbl, _ftype in [
+        ("Cross Bracing — Compression", "compression"),
+        ("Cross Bracing — Tension",     "tension"),
+    ]:
+        _u = _raw_ur(_cb_row(_ftype))
+        if _u is not None:
+            _ur_chart_rows.append((_lbl, _u))
+
+    if _ed_is_cb:
+        for _lbl, _ftype in [
+            ("End Diaphragm — Compression", "compression"),
+            ("End Diaphragm — Tension",     "tension"),
+        ]:
+            _u = _raw_ur(_cb_row(_ftype))
+            if _u is not None:
+                _ur_chart_rows.append((_lbl, _u))
+
+    # Generate the LaTeX figure blocks (empty string when no data available)
+    try:
+        ur_charts_latex = build_ur_charts_latex(_ur_chart_rows)
+    except Exception:
+        ur_charts_latex = ""
+    # ── end Task 4 ───────────────────────────────────────────────────────────
+
     return r"""
 \chapter{Design Checks}
 
@@ -1501,5 +1569,14 @@ End diaphragms at the supports transfer transverse loads to the bearings, restra
 \end{longtable}
 \noindent\textit{Note: UR = Demand / Capacity. All values $\leq 1.0$ indicate passing checks. The governing check for each component is highlighted in the individual design check sections above.}
 
+\vspace{1.5em}
+\noindent\textbf{Utilization Ratio (Demand/Capacity) Charts}
+
+\noindent The following bar charts visualise the Utilization Ratio (UR = Demand\,/\,Capacity)
+for each structural element group. Bars shown in \textcolor{osdagGreen}{green} indicate
+passing checks (UR\,$\leq$\,1.0); bars in \textcolor{red}{red} indicate failing checks
+(UR\,$>$\,1.0). The dashed red line marks the UR\,=\,1.0 threshold.
+
+""" + ur_charts_latex + r"""
 """
 
