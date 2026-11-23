@@ -1,8 +1,11 @@
 """Helpers that post-process the generated LaTeX source.
 
-add_repeating_headers() adds \\endfirsthead / \\endhead to every longtable
-that has a single bold header row but no repeating header yet, so the
-column titles are printed again on every page the table continues onto.
+add_repeating_headers() makes every longtable that has a single bold header
+row (and no repeating header yet) repeat that header on every page.
+
+It also puts the missing row end after the table caption. LaTeX requires
+"\\caption{...}\\\\" inside a longtable head; without it LaTeX reports
+"Misplaced \\noalign" errors, which were silently ignored before.
 """
 import re
 
@@ -78,6 +81,7 @@ def _add_header_to_table(table):
     j = close + 1
 
     # Optional caption (and optional label / row end after it)
+    caption_needs_row_end = None
     k = _skip_ws(table, j)
     if table.startswith('\\caption', k):
         p = _skip_optional_arg(table, k + len('\\caption'))
@@ -94,9 +98,11 @@ def _add_header_to_table(table):
             if lc == -1:
                 return table
             j = lc + 1
-        k = _skip_ws(table, j)
+            k = _skip_ws(table, j)
         if table.startswith('\\\\', k):
             j = _skip_optional_arg(table, k + 2)
+        else:
+            caption_needs_row_end = j
 
     # Header = \hline  one bold row  \hline
     k = _skip_ws(table, j)
@@ -118,7 +124,11 @@ def _add_header_to_table(table):
 
     header_block = table[head_start:head_end]
     insert = '\n\\endfirsthead\n' + header_block + '\n\\endhead\n'
-    return table[:head_end] + insert + table[head_end:]
+    result = table[:head_end] + insert + table[head_end:]
+    if caption_needs_row_end is not None:
+        pos = caption_needs_row_end
+        result = result[:pos] + '\\\\' + result[pos:]
+    return result
 
 
 def add_repeating_headers(tex):
