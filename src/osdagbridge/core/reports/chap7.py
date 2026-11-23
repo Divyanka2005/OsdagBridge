@@ -1,4 +1,13 @@
+from osdagbridge.core.reports.charts import build_material_charts_latex
+
+
 def ch7_quantities(input_dict):
+    # Generate material quantity bar charts (Task 5)
+    try:
+        material_charts = build_material_charts_latex(input_dict)
+    except Exception:
+        material_charts = ""
+
     return r"""
 \chapter{Material Take-off \& Quantity Summary}
 \label{ch:material-takeoff}
@@ -28,6 +37,13 @@ def ch7_quantities(input_dict):
 6 & Crash Barrier & """ + str(input_dict.get("crash_barrier_vol_formula", "N.A.")) + r""" & """ + str(input_dict.get("crash_barrier_qty", "N.A.")) + r""" & """ + str(input_dict.get("crash_barrier_vol_total", "N.A.")) + r""" & """ + str(input_dict.get("crash_barrier_wt_single", "N.A.")) + r""" & """ + str(input_dict.get("crash_barrier_wt_total", "N.A.")) + r""" \\
 \hline
 \end{longtable}
+
+\vspace{1.5em}
+\noindent\textbf{Material Quantity Visualizations}
+
+\noindent The following charts summarize the material quantities from Table~7.1 above.
+
+""" + material_charts + r"""
 """
 
 
